@@ -1,0 +1,32 @@
+name: Build and Deploy LaTeX
+on:
+  push:
+    branches: [ main ] # Or 'master', depending on your default branch
+
+permissions:
+  contents: write
+
+jobs:
+  build_and_deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Compile LaTeX
+        uses: xu-cheng/latex-action@v3
+        with:
+          root_file: main.tex # Update this to your primary .tex file
+          # compiler: latexmk # Optional: Uncomment if you need specific latexmk flags
+
+      - name: Prepare Deployment Directory
+        run: |
+          mkdir public
+          cp main.pdf public/ # Update this to match your root_file's output
+          cp index.html public/
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./public

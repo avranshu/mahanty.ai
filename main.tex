@@ -1,0 +1,130 @@
+\documentclass{beamer}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage[normalem]{ulem} % For strikethrough text
+
+\title{Weight Distribution Optimization via Interior Point Methods}
+\author{Avranshu Mahanty}
+\institute{University of Cincinnati}
+\date{\today}
+
+\begin{document}
+
+\begin{frame}
+    \titlepage
+\end{frame}
+
+\begin{frame}{Problem Setup}
+    Let $\mathcal{L}(\Theta)$ be the loss function.\\
+    $\Theta$ be the set of parameters of the neural network.\\
+    $\Theta \sim p_{\theta}(\Theta)$; Weights follow a distribution. (Assumption).
+    
+    \vspace{0.5cm}
+    \textbf{Objective:-} Minimize the ``Expected Loss'' over weights.
+    \[
+        \therefore \min \int_{-\infty}^{\infty} p_{\theta}(\Theta) \cdot \mathcal{L}(\Theta) \cdot d\Theta
+    \]
+    
+    \vspace{0.5cm}
+    \textbf{Constraints:-} Probability axioms
+    \begin{align*}
+        \int_{-\infty}^{\infty} p_{\theta}(\Theta) \cdot d\Theta &= 1 \quad \text{[Normalization]} \\
+        p_{\theta}(\Theta) &\geq 0 \ \forall \Theta \quad \text{[PDF must be } \geq 0\text{]}
+    \end{align*}
+\end{frame}
+
+\begin{frame}{Constrained Optimization \& Log-Barrier}
+    \textbf{Constrained Optimization Problem:-}
+    \begin{align*}
+        \min \quad & \int_{-\infty}^{\infty} p_{\theta}(\Theta) \cdot \mathcal{L}(\Theta) \cdot d\Theta \\
+        \text{s.t.} \quad & \int_{-\infty}^{\infty} p_{\theta}(\Theta) \cdot d\Theta = 1 \\
+        & p_{\theta}(\Theta) \geq 0 \ \forall \Theta
+    \end{align*}
+    
+    \vspace{0.5cm}
+    \textbf{Adding Log-Barrier term}
+    \begin{align*}
+        \min \quad & \int_{-\infty}^{\infty} p_{\theta}(\Theta)\mathcal{L}(\Theta) \cdot d\Theta - \mu \int_{-\infty}^{\infty} \log p_{\theta}(\Theta) \cdot d\Theta \\
+        \text{s.t.} \quad & \int_{-\infty}^{\infty} p_{\theta}(\Theta) \cdot d\Theta = 1
+    \end{align*}
+    No non-negativity constraints
+\end{frame}
+
+\begin{frame}{The Lagrangian \& Derivative}
+    \textbf{Lagrangian.}
+    \begin{align*}
+        L &= \int_{-\infty}^{\infty} p_{\theta}(\Theta)\mathcal{L}(\Theta)d\Theta - \mu \int_{-\infty}^{\infty} \log p_{\theta}(\Theta)d\Theta \\
+        &\quad + \lambda \left[ \int_{-\infty}^{\infty} p_{\theta}(\Theta)d\Theta - 1 \right]
+    \end{align*}
+    
+    \[
+        L = -\lambda + \int_{-\infty}^{\infty} \left[ p_{\theta}(\Theta)\mathcal{L}(\Theta) - \mu \log p_{\theta}(\Theta) + \lambda p_{\theta}(\Theta) \right] \cdot d\Theta
+    \]
+    
+    \vspace{0.5cm}
+    \textbf{Derivative of the Lagrangian}
+    \[
+        \frac{dL}{d\Theta} = \mathcal{L}(\Theta) - \frac{\mu}{p_{\theta}(\Theta)} + \lambda
+    \]
+\end{frame}
+
+\begin{frame}{KKT Conditions}
+    \textbf{KKT conditions}
+    \begin{enumerate}
+        \item \textbf{Stationarity:-} $\mathcal{L}(\Theta) + \lambda - \frac{\mu}{p_{\theta}(\Theta)} = 0$
+        \vspace{0.2cm}
+        \item \textbf{Feasibility:-} $\int_{-\infty}^{\infty} p_{\theta}(\Theta) \cdot d\Theta = 1$ ; $q_{\theta}(\Theta) \geq 0 \ \forall \Theta$
+        \vspace{0.2cm}
+        \item \textbf{Complementary Slackness:-} $p_{\theta}(\Theta) \cdot q_{\theta}(\Theta) = \mu$
+    \end{enumerate}
+\end{frame}
+
+\begin{frame}{Stationarity \& Limits}
+    \textbf{From stationarity,}
+    \[
+        p_{\theta}^*(\Theta) = \frac{\mu}{\mathcal{L}(\Theta) + \lambda}
+    \]
+    
+    Also, $\int_{-\infty}^{\infty} p_{\theta}(\Theta) \cdot d\Theta = 1 \quad \therefore \mu = \frac{1}{\int_{-\infty}^{\infty} \frac{d\Theta}{\mathcal{L}(\Theta) + \lambda}}$
+    
+    \vspace{0.5cm}
+    As $\mu \rightarrow 0$, $\int_{-\infty}^{\infty} \frac{d\Theta}{\mathcal{L}(\Theta) + \lambda} \rightarrow \infty$
+    \[
+        \therefore \mathcal{L}(\Theta) + \lambda \rightarrow 0
+    \]
+    
+    \vspace{0.2cm}
+    \begin{center}
+        \boxed{\therefore \lambda = -\min \mathcal{L}(\Theta)} \text{ At optimum}
+    \end{center}
+\end{frame}
+
+\begin{frame}{Stationarity Analysis}
+    \textbf{Therefore}
+    \begin{align*}
+        \mathcal{L}(\Theta) - \frac{\mu(\Theta)}{p_{\theta}(\Theta)} + \lambda(\Theta) &= 0 \text{ (Stationarity).} \\
+        \mu(\Theta) &= p_{\theta}(\Theta)\{\mathcal{L}(\Theta) + \lambda(\Theta)\} \quad \sout{= 0 \text{ (Optimal)}} \\
+        \mu'(\Theta) &= p_{\theta}'(\Theta)\{\mathcal{L}(\Theta) + \lambda(\Theta)\} + \{\mathcal{L}'(\Theta) + \lambda'(\Theta)\}p_{\theta}(\Theta).
+    \end{align*}
+    
+    At optimality, $\{\mathcal{L}(\Theta) + \lambda(\Theta)\} \rightarrow 0$
+    \[
+        \therefore \mu'(\Theta) = \{\mathcal{L}'(\Theta) + \lambda'(\Theta)\}p_{\theta}(\Theta). 
+    \]
+    
+    \begin{center}
+        \boxed{\therefore \mu'(\Theta) = \mathcal{L}'(\Theta)p_{\theta}(\Theta).}
+    \end{center}
+\end{frame}
+
+\begin{frame}{Updating the Parameters}
+    \textbf{Push $\mu \rightarrow 0$, with,}
+    \begin{align*}
+        p_{\theta}(\Theta)\{\mathcal{L}(\Theta) + \lambda(\Theta)\} &= \mu(\Theta) \\
+        \mu'(\Theta) &= \mathcal{L}'(\Theta) \cdot p_{\theta}(\Theta)
+    \end{align*}
+    
+    At optimum, $\Theta = \Theta^*$, $\mathcal{L}(\Theta^*) = -\lambda(\Theta)$; $\mu(\Theta^*) = 0$.
+\end{frame}
+
+\end{document}
